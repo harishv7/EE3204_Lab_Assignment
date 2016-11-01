@@ -4,7 +4,7 @@ tcp_client.c: the source file of the client in tcp transmission
 
 #include "headsock.h"
 
-#define FILENAME "newfile.txt"
+#define FILENAME "myfile.txt"
 
 //transmission function
 float str_cli(FILE *fp, int sockfd, long *len);
@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
 float str_cli(FILE *fp, int sockfd, long *len) {
 	char *buf;
 	long lsize, ci;
-	char sends[DATALEN + 1];	// plus 1 for the checksum byte
+	char sends[DATALEN];	// plus 1 for the checksum byte
 	struct ack_so ack;
 	int n, slen;
 	float time_inv = 0.0;
@@ -111,7 +111,7 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	lsize = ftell (fp);
 	rewind (fp);
 	printf("The file length is %d bytes\n", (int)lsize);
-	printf("the packet length is %d bytes (including checksum)\n",(DATALEN + 1));
+	printf("the packet length is %d bytes (including checksum)\n",(DATALEN));
 
 	// allocate memory to contain the whole file.
 	buf = (char *) malloc (lsize);
@@ -129,10 +129,11 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 
 	while(ci <= lsize) {
 		// checking if the last packet to be sent has lesser bytes than we allow
-		if ((lsize+1-ci) <= DATALEN) {
+		// last byte is reserved for checksum
+		if ((lsize+1-ci) <= DATALEN - 1) {
 			slen = lsize+1-ci;
 		} else {
-			slen = DATALEN;
+			slen = DATALEN - 1;
 		}
 
 		memcpy(sends, (buf+ci), slen);
