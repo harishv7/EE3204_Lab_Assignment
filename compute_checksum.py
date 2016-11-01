@@ -5,5 +5,4 @@ def compute(string):
     return checksum
 
 checksum = compute("Hello World! Rock on buddy!")
-checksum = compute("zzzzzzzzzzzzzzzzzzz")
 print(checksum)

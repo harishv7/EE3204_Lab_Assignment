@@ -128,19 +128,25 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	gettimeofday(&sendt, NULL);
 
 	while(ci <= lsize) {
+		// checking if the last packet to be sent has lesser bytes than we allow
 		if ((lsize+1-ci) <= DATALEN) {
 			slen = lsize+1-ci;
 		} else {
 			slen = DATALEN;
 		}
 
-		// compute checksum for data
-		int checksum = compute_checksum(sends);
-
 		memcpy(sends, (buf+ci), slen);
 
-		// send the data
-		n = send(sockfd, &sends, slen, 0);
+		// compute checksum for data
+		int checksum = compute_checksum(sends);
+		// printf("Computed checksum: %d\n", checksum);
+
+		// add checksum to end of data array to be sent
+		sends[slen] = (char) checksum;
+		// printf("Added checksum: %c, %d\n", (char) checksum, checksum);
+
+		// send the data (plus 1 to slen for checksum)
+		n = send(sockfd, &sends, slen+1, 0);
 
 		if(n == -1) {
 			printf("send error!");
@@ -184,7 +190,7 @@ int compute_checksum(char data[]) {
 	for(i = 0; i < num_of_elements; i++) {
 		checksum = checksum ^ data[i];
 	}
-	printf("Final checksum is: %d \n", checksum);
+	// printf("Final checksum computed is: %d \n", checksum);
 	return checksum;
 }
 

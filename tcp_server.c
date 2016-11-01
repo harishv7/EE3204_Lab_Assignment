@@ -93,8 +93,12 @@ void str_ser(int sockfd) {
 			exit(1);
 		}
 
+		printf("Checksum received: %d\n", (int) recvs[n-1]);
+
 		// if it is the end of the file
-		if (recvs[n-1] == '\0') {
+		// minus 2 for excluding the checksum at end
+		if (recvs[n-2] == '\0') {
+			printf("Null character detected.\n");
 			end = 1;
 			n --;
 		}
