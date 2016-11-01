@@ -3,6 +3,6 @@ tcp_client
 
 tcp_server
 
-tcp_client.dSYM/Contents/Resources/DWARF/tcp_client
+tcp_client.dSYM
 
-tcp_server.dSYM/Contents/Resources/DWARF/tcp_server
+tcp_server.dSYM
