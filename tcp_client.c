@@ -6,7 +6,7 @@ tcp_client.c: the source file of the client in tcp transmission
 
 #define FILENAME "myfile.txt"
 
-//transmission function
+// transmission function
 float str_cli(FILE *fp, int sockfd, long *len);
 
 // calculate the time interval between out and in
@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
 	// create the socket
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (sockfd <0) {
+	if (sockfd < 0) {
 		printf("error in socket");
 		exit(1);
 	}
@@ -187,9 +187,9 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	// get the whole trans time
 	tv_sub(&recvt, &sendt);
 
-	time_inv += (recvt.tv_sec)*1000.0 + (recvt.tv_usec)/1000.0;
+	time_inv += (recvt.tv_sec) * 1000.0 + (recvt.tv_usec) / 1000.0;
 
-	return(time_inv);
+	return time_inv;
 }
 
 int compute_checksum(char data[]) {
