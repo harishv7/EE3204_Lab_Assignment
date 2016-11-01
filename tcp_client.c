@@ -23,18 +23,27 @@ int main(int argc, char **argv) {
 	char ** pptr;
 	struct hostent *sh;
 	struct in_addr **addrs;
+	int error_prob;
 	FILE *fp;
 
-	if (argc != 2) {
-		printf("parameters not match");
+	// number of parameters is 3 (filename, server name, error probability)
+	if (argc != 3) {
+		printf("Parameters do not match. Expected: <server_name> <error_prob>\n");
 	}
 
 	// get host's information
 	sh = gethostbyname(argv[1]);
 	if (sh == NULL) {
-		printf("error when gethostby name");
+		printf("Error when attempting gethostby name\n");
 		exit(0);
 	}
+
+	// get error probability
+	error_prob = atoi(argv[2]);
+	if (error_prob == NULL) {
+		printf("Error when attemptig to interpret error probability\n");
+	}
+	printf("Error probability is %d\n", error_prob);
 
 	// print the remote host's information
 	printf("canonical name: %s\n", sh->h_name);
