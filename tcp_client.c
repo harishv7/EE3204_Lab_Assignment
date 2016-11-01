@@ -4,11 +4,16 @@ tcp_client.c: the source file of the client in tcp transmission
 
 #include "headsock.h"
 
+#define FILENAME "newfile.txt"
+
 //transmission function
 float str_cli(FILE *fp, int sockfd, long *len);
 
 // calculate the time interval between out and in
-void tv_sub(struct  timeval *out, struct timeval *in);	    
+void tv_sub(struct  timeval *out, struct timeval *in);
+
+// compute checksum
+int compute_checksum(char data[]);
 
 int main(int argc, char **argv) {
 	int sockfd, ret;
@@ -73,7 +78,7 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 	
-	if((fp = fopen ("myfile.txt","r+t")) == NULL) {
+	if((fp = fopen (FILENAME,"r+t")) == NULL) {
 		printf("File doesn't exit\n");
 		exit(0);
 	}
@@ -95,7 +100,7 @@ int main(int argc, char **argv) {
 float str_cli(FILE *fp, int sockfd, long *len) {
 	char *buf;
 	long lsize, ci;
-	char sends[DATALEN];
+	char sends[DATALEN + 1];	// plus 1 for the checksum byte
 	struct ack_so ack;
 	int n, slen;
 	float time_inv = 0.0;
@@ -106,7 +111,7 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	lsize = ftell (fp);
 	rewind (fp);
 	printf("The file length is %d bytes\n", (int)lsize);
-	printf("the packet length is %d bytes\n",DATALEN);
+	printf("the packet length is %d bytes (including checksum)\n",(DATALEN + 1));
 
 	// allocate memory to contain the whole file.
 	buf = (char *) malloc (lsize);
@@ -122,12 +127,15 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	// get the current time
 	gettimeofday(&sendt, NULL);
 
-	while(ci<= lsize) {
+	while(ci <= lsize) {
 		if ((lsize+1-ci) <= DATALEN) {
 			slen = lsize+1-ci;
 		} else {
 			slen = DATALEN;
 		}
+
+		// compute checksum for data
+		int checksum = compute_checksum(sends);
 
 		memcpy(sends, (buf+ci), slen);
 
@@ -166,6 +174,18 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	time_inv += (recvt.tv_sec)*1000.0 + (recvt.tv_usec)/1000.0;
 
 	return(time_inv);
+}
+
+int compute_checksum(char data[]) {
+	int checksum = 0;
+	int i = 0;
+	int num_of_elements = sizeof(data) / sizeof(data[0]);
+
+	for(i = 0; i < num_of_elements; i++) {
+		checksum = checksum ^ data[i];
+	}
+	printf("Final checksum is: %d \n", checksum);
+	return checksum;
 }
 
 void tv_sub(struct  timeval *out, struct timeval *in) {
