@@ -105,18 +105,14 @@ void str_ser(int sockfd) {
 		// send ack/nack for each packet received
 		ack.num = 1;
 		ack.len = 0;
+
 		printf("Sending ACK for received packet\n");
-		send(sockfd, &ack, 2, 0);
+
+		if ((n = send(sockfd, &ack, 2, 0)) == -1) {
+			printf("Error while sending ACK packet!");
+			exit(1);
+		}
 	}
-
-	ack.num = 1;
-	ack.len = 0;
-
-	// send the ack
-	// if ((n = send(sockfd, &ack, 2, 0))==-1) {
-	// 		printf("send error!");
-	// 		exit(1);
-	// }
 
 	if ((fp = fopen ("myTCPreceive.txt","wt")) == NULL) {
 		printf("File doesn't exit\n");

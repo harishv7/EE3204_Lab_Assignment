@@ -140,26 +140,20 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 		}
 
 		// wait for ack/nack from receiver
-		recv(sockfd, &ack, 2, 0);
+		if ((n = recv(sockfd, &ack, 2, 0)) == -1) {
+			printf("Error when receiving ACK/NACK\n");
+			exit(1);
+		}
 
 		if(ack.num == 1) {
 			printf("Received ACK from Server\n");
 			ci += slen;
 		} else {
 			printf("Received NACK from Server\n");
+			// continue without incrementing ci
 			continue;
 		}
 	}
-
-	// receive the ack
-	// if ((n= recv(sockfd, &ack, 2, 0))==-1) {
-	// 	printf("error when receiving\n");
-	// 	exit(1);
-	// }
-
-	// if (ack.num != 1|| ack.len != 0) {
-	// 	printf("error in transmission\n");
-	// }
 
 	// get current time
 	gettimeofday(&recvt, NULL);
