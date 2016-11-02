@@ -99,6 +99,7 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	long lsize, ci;
 	char sends[DATALEN];
 	struct ack_so ack;
+	struct pack_so packet;
 	int n, slen;
 	float time_inv = 0.0;
 	struct timeval sendt, recvt;
@@ -107,8 +108,8 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	fseek (fp , 0 , SEEK_END);
 	lsize = ftell (fp);
 	rewind (fp);
-	printf("The file length is %d bytes\n", (int)lsize);
-	printf("the packet length is %d bytes\n",DATALEN);
+	printf("The file length is %d bytes\n", (int) lsize);
+	printf("the packet length is %d bytes\n", DATALEN);
 
 	// allocate memory to contain the whole file.
 	buf = (char *) malloc (lsize);
@@ -131,10 +132,13 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 			slen = DATALEN;
 		}
 
-		memcpy(sends, (buf+ci), slen);
+		memcpy(packet.data, (buf+ci), slen);
+
+		packet.len = slen;
+		packet.num = 0;
 
 		// send the data
-		n = send(sockfd, &sends, slen, 0);
+		n = send(sockfd, &packet, (packet.len + HEADLEN), 0);
 
 		if(n == -1) {
 			printf("send error!");
