@@ -10,10 +10,7 @@ tcp_client.c: the source file of the client in tcp transmission
 float str_cli(FILE *fp, int sockfd, long *len);
 
 // calculate the time interval between out and in
-void tv_sub(struct  timeval *out, struct timeval *in);
-
-// compute checksum
-int compute_checksum(char data[]);
+void tv_sub(struct  timeval *out, struct timeval *in);	    
 
 int main(int argc, char **argv) {
 	int sockfd, ret;
@@ -23,27 +20,18 @@ int main(int argc, char **argv) {
 	char ** pptr;
 	struct hostent *sh;
 	struct in_addr **addrs;
-	int error_prob;
 	FILE *fp;
 
-	// number of parameters is 3 (filename, server name, error probability)
-	if (argc != 3) {
-		printf("Parameters do not match. Expected: <server_name> <error_prob>\n");
+	if (argc != 2) {
+		printf("parameters not match");
 	}
 
 	// get host's information
 	sh = gethostbyname(argv[1]);
 	if (sh == NULL) {
-		printf("Error when attempting gethostby name\n");
+		printf("error when gethostby name");
 		exit(0);
 	}
-
-	// get error probability
-	error_prob = atoi(argv[2]);
-	if (error_prob == NULL) {
-		printf("Error when attemptig to interpret error probability\n");
-	}
-	printf("Error probability is %d\n", error_prob);
 
 	// print the remote host's information
 	printf("canonical name: %s\n", sh->h_name);
@@ -66,7 +54,7 @@ int main(int argc, char **argv) {
 	// create the socket
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (sockfd < 0) {
+	if (sockfd <0) {
 		printf("error in socket");
 		exit(1);
 	}
@@ -87,7 +75,7 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 	
-	if((fp = fopen (FILENAME,"r+t")) == NULL) {
+	if((fp = fopen ("myfile.txt","r+t")) == NULL) {
 		printf("File doesn't exit\n");
 		exit(0);
 	}
@@ -109,7 +97,7 @@ int main(int argc, char **argv) {
 float str_cli(FILE *fp, int sockfd, long *len) {
 	char *buf;
 	long lsize, ci;
-	char sends[DATALEN];	// plus 1 for the checksum byte
+	char sends[DATALEN];
 	struct ack_so ack;
 	int n, slen;
 	float time_inv = 0.0;
@@ -120,7 +108,7 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	lsize = ftell (fp);
 	rewind (fp);
 	printf("The file length is %d bytes\n", (int)lsize);
-	printf("the packet length is %d bytes (including checksum)\n",(DATALEN));
+	printf("the packet length is %d bytes\n",DATALEN);
 
 	// allocate memory to contain the whole file.
 	buf = (char *) malloc (lsize);
@@ -136,27 +124,17 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	// get the current time
 	gettimeofday(&sendt, NULL);
 
-	while(ci <= lsize) {
-		// checking if the last packet to be sent has lesser bytes than we allow
-		// last byte is reserved for checksum
-		if ((lsize+1-ci) <= DATALEN - 1) {
+	while(ci<= lsize) {
+		if ((lsize+1-ci) <= DATALEN) {
 			slen = lsize+1-ci;
 		} else {
-			slen = DATALEN - 1;
+			slen = DATALEN;
 		}
 
 		memcpy(sends, (buf+ci), slen);
 
-		// compute checksum for data
-		int checksum = compute_checksum(sends);
-		// printf("Computed checksum: %d\n", checksum);
-
-		// add checksum to end of data array to be sent
-		sends[slen] = (char) checksum;
-		// printf("Added checksum: %c, %d\n", (char) checksum, checksum);
-
-		// send the data (plus 1 to slen for checksum)
-		n = send(sockfd, &sends, slen+1, 0);
+		// send the data
+		n = send(sockfd, &sends, slen, 0);
 
 		if(n == -1) {
 			printf("send error!");
@@ -187,21 +165,9 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	// get the whole trans time
 	tv_sub(&recvt, &sendt);
 
-	time_inv += (recvt.tv_sec) * 1000.0 + (recvt.tv_usec) / 1000.0;
+	time_inv += (recvt.tv_sec)*1000.0 + (recvt.tv_usec)/1000.0;
 
-	return time_inv;
-}
-
-int compute_checksum(char data[]) {
-	int checksum = 0;
-	int i = 0;
-	int num_of_elements = sizeof(data) / sizeof(data[0]);
-
-	for(i = 0; i < num_of_elements; i++) {
-		checksum = checksum ^ data[i];
-	}
-	// printf("Final checksum computed is: %d \n", checksum);
-	return checksum;
+	return(time_inv);
 }
 
 void tv_sub(struct  timeval *out, struct timeval *in) {

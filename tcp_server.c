@@ -9,9 +9,6 @@ tcp_ser.c: the source file of the server in tcp transmission
 // transmitting and receiving function
 void str_ser(int sockfd);
 
-// computes checksum using simple xor
-int compute_checksum(char data[]);
-
 int main(void) {
 	int sockfd, con_fd, ret;
 	struct sockaddr_in my_addr;
@@ -91,53 +88,29 @@ void str_ser(int sockfd) {
 
 	while(!end) {
 		// receive the packet
-		if ((n = recv(sockfd, &recvs, DATALEN, 0)) == -1) {
+		if ((n= recv(sockfd, &recvs, DATALEN, 0))==-1) {
 			printf("error when receiving\n");
 			exit(1);
 		}
 
-		printf("Checksum received: %d\n", (int) recvs[n-1]);
-		int received_checksum =  (int) recvs[n-1];
+		// if it is the end of the file
+		if (recvs[n-1] == '\0') {
+			end = 1;
+			n --;
+		}
 
-		// compute checksum on received data
-		int computed_checksum = compute_checksum(recvs);
+		memcpy((buf+lseek), recvs, n);
+		lseek += n;
 
-		if(computed_checksum == received_checksum) {
-			// if it is the end of the file
-			// minus 2 for excluding the checksum at end
-			if (recvs[n-2] == '\0') {
-				printf("Null character detected.\n");
-				end = 1;
-				n --;
-			}
+		// send ack/nack for each packet received
+		ack.num = 1;
+		ack.len = 0;
 
-			// copy all bytes into buffer except the checksum
-			memcpy((buf+lseek), recvs, n-1);
-			lseek += n - 1;
+		printf("Sending ACK for received packet\n");
 
-			// send ack/nack for each packet received
-			ack.num = 1;
-			ack.len = 0;
-
-			printf("Sending ACK for received packet\n");
-
-			if ((n = send(sockfd, &ack, 2, 0)) == -1) {
-				printf("Error while sending ACK packet!");
-				exit(1);
-			}
-		} else {
-			printf("Checksum check has failed\n");
-			
-			// send NACK if the checksum does not match
-			ack.num = -1;
-			ack.len = 0;
-
-			printf("Sending NACK for received packet\n");
-
-			if ((n = send(sockfd, &ack, 2, 0)) == -1) {
-				printf("Error while sending NACK packet!");
-				exit(1);
-			}
+		if ((n = send(sockfd, &ack, 2, 0)) == -1) {
+			printf("Error while sending ACK packet!");
+			exit(1);
 		}
 	}
 
@@ -150,16 +123,4 @@ void str_ser(int sockfd) {
 	fwrite (buf , 1 , lseek , fp);
 	fclose(fp);
 	printf("a file has been successfully received!\nthe total data received is %d bytes\n", (int)lseek);
-}
-
-int compute_checksum(char data[]) {
-	int checksum = 0;
-	int i = 0;
-	int num_of_elements = sizeof(data) / sizeof(data[0]);
-
-	for(i = 0; i < num_of_elements; i++) {
-		checksum = checksum ^ data[i];
-	}
-	// printf("Final checksum computed is: %d \n", checksum);
-	return checksum;
 }
