@@ -4,6 +4,7 @@ tcp_client.c: the source file of the client in tcp transmission
 
 #include "headsock.h"
 
+// file to be transmitted
 #define FILENAME "myfile.txt"
 
 // transmission function
@@ -151,7 +152,7 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 			exit(1);
 		}
 
-		if(ack.num == 1) {
+		if(ack.num == ACK_CODE) {
 			printf("Received ACK from Server\n");
 			ci += slen;
 		} else {

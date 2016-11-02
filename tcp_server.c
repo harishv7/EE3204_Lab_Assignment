@@ -3,11 +3,12 @@ tcp_ser.c: the source file of the server in tcp transmission
 ***********************************/
 
 #include "headsock.h"
+#include <stdlib.h>
 
 #define BACKLOG 10
 
 // transmitting and receiving function
-void str_ser(int sockfd);
+void str_ser(int sockfd, int error_prob);
 
 int main(int argc, char **argv) {
 	int sockfd, con_fd, ret;
@@ -24,6 +25,9 @@ int main(int argc, char **argv) {
 
 	// obtain error probability & convert from string to int
 	error_prob = atoi(argv[1]);
+
+	// initialise rand seed
+	srand(time(NULL));
 
 	//create socket
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -70,7 +74,7 @@ int main(int argc, char **argv) {
 		if ((pid = fork())==0) {
 			close(sockfd);
 			// receive packet and response
-			str_ser(con_fd);
+			str_ser(con_fd, error_prob);
 			close(con_fd);
 			exit(0);
 		}
@@ -83,13 +87,17 @@ int main(int argc, char **argv) {
 	exit(0);
 }
 
-void str_ser(int sockfd) {
+void str_ser(int sockfd, int error_prob) {
 	char buf[BUFSIZE];
 	FILE *fp;
 	struct pack_so recvs;
 	struct ack_so ack;
 	int end, n = 0;
-	long lseek=0;
+	long lseek = 0;
+	int random_num;
+	int is_packet_damaged;
+	int num_of_errors = 0;
+	int total_packets = 0;
 	end = 0;
 	
 	printf("receiving data!\n");
@@ -102,25 +110,56 @@ void str_ser(int sockfd) {
 			exit(1);
 		}
 
-		// if it is the end of the file
-		if (recvs.data[n - HEADLEN - 1] == '\0') {
-			end = 1;
-			n--;
+		// increment total packet count
+		total_packets++;
+
+		// determine if the packet is damaged (based on error probability)
+		// generate random number from 0 to 100
+		random_num = rand() % 101;
+		// check if random number is less than or equal to the error probability
+		if(random_num <= error_prob) {
+			is_packet_damaged = 1;
+		} else {
+			is_packet_damaged = 0;
 		}
 
-		// copy only the data
-		memcpy((buf+lseek), recvs.data, n - HEADLEN);
-		lseek += n - HEADLEN;
+		// if packet is not damaged, proceed normally and send ACK
+		// else, send NACK
+		if(is_packet_damaged == 0) {
+			// if it is the end of the file (check last index if it is a null char)
+			if (recvs.data[n - HEADLEN - 1] == '\0') {
+				end = 1;
+				n--;
+			}
 
-		// send ack/nack for each packet received
-		ack.num = 1;
-		ack.len = 0;
+			// copy only the data
+			memcpy((buf+lseek), recvs.data, n - HEADLEN);
+			lseek += n - HEADLEN;
 
-		printf("Sending ACK for received packet\n");
+			// send ACK for each packet received
+			ack.num = 1;
+			ack.len = 0;
 
-		if ((n = send(sockfd, &ack, 2, 0)) == -1) {
-			printf("Error while sending ACK packet!");
-			exit(1);
+			printf("Sending ACK for received packet\n");
+
+			if ((n = send(sockfd, &ack, 2, 0)) == -1) {
+				printf("Error while sending ACK packet!");
+				exit(1);
+			}
+		} else {
+			// send NACK for each packet received
+			ack.num = -1;
+			ack.len = 0;
+
+			printf("Sending NACK for received packet\n");
+
+			// increment number of errors
+			num_of_errors++;
+
+			if ((n = send(sockfd, &ack, 2, 0)) == -1) {
+				printf("Error while sending NACK packet!");
+				exit(1);
+			}
 		}
 	}
 
@@ -132,5 +171,10 @@ void str_ser(int sockfd) {
 	// write data into file
 	fwrite (buf , 1 , lseek , fp);
 	fclose(fp);
-	printf("a file has been successfully received!\nthe total data received is %d bytes\n", (int)lseek);
+	printf("a file has been successfully received!\nthe total data received is %d bytes\n", (int) lseek);
+	
+	// print error metrics
+	printf("Total number of errors received: %d\n", num_of_errors);
+	printf("Total number of packets received: %d\n", total_packets);
+	printf("Error Rate: %.2f\n", (num_of_errors / (float) total_packets));
 }
