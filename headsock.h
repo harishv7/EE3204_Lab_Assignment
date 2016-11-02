@@ -20,6 +20,8 @@
 #define BUFSIZE 60000
 #define PACKLEN 508
 #define HEADLEN 8
+#define ACK_CODE 1
+#define NACK_CODE -1
 
 struct pack_so			//data packet structure
 {
