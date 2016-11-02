@@ -97,9 +97,8 @@ int main(int argc, char **argv) {
 float str_cli(FILE *fp, int sockfd, long *len) {
 	char *buf;
 	long lsize, ci;
-	char sends[DATALEN];
 	struct ack_so ack;
-	struct pack_so packet;
+	struct pack_so sends;
 	int n, slen;
 	float time_inv = 0.0;
 	struct timeval sendt, recvt;
@@ -132,13 +131,13 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 			slen = DATALEN;
 		}
 
-		memcpy(packet.data, (buf+ci), slen);
+		memcpy(sends.data, (buf+ci), slen);
 
-		packet.len = slen;
-		packet.num = 0;
+		sends.len = slen;
+		sends.num = 0;
 
 		// send the data
-		n = send(sockfd, &packet, (packet.len + HEADLEN), 0);
+		n = send(sockfd, &sends, (sends.len + HEADLEN), 0);
 
 		if(n == -1) {
 			printf("send error!");

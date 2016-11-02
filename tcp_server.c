@@ -78,8 +78,7 @@ int main(void) {
 void str_ser(int sockfd) {
 	char buf[BUFSIZE];
 	FILE *fp;
-	char recvs[DATALEN];
-	struct pack_so packet;
+	struct pack_so recvs;
 	struct ack_so ack;
 	int end, n = 0;
 	long lseek=0;
@@ -89,19 +88,19 @@ void str_ser(int sockfd) {
 
 	while(!end) {
 		// receive the packet
-		if ((n = recv(sockfd, &packet, PACKLEN, 0)) == -1) {
+		if ((n = recv(sockfd, &recvs, PACKLEN, 0)) == -1) {
 			printf("error when receiving\n");
 			exit(1);
 		}
 
 		// if it is the end of the file
-		if (packet.data[n - HEADLEN - 1] == '\0') {
+		if (recvs.data[n - HEADLEN - 1] == '\0') {
 			end = 1;
 			n--;
 		}
 
 		// copy only the data
-		memcpy((buf+lseek), packet.data, n - HEADLEN);
+		memcpy((buf+lseek), recvs.data, n - HEADLEN);
 		lseek += n - HEADLEN;
 
 		// send ack/nack for each packet received
