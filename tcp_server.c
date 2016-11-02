@@ -184,5 +184,5 @@ void str_ser(int sockfd, int error_prob) {
 	// print error metrics
 	printf("Total number of errors received: %d\n", num_of_errors);
 	printf("Total number of packets received: %d\n", total_packets);
-	printf("Error Rate: %.5f\n", (num_of_errors / (float) total_packets));
+	printf("Error Rate: %.5f%%\n", (num_of_errors / (float) total_packets * 100.0));
 }
