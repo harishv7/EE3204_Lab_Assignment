@@ -153,10 +153,10 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 		}
 
 		if(ack.num == ACK_CODE) {
-			printf("Received ACK from Server\n");
+			// printf("Received ACK from Server\n");
 			ci += slen;
 		} else {
-			printf("Received NACK from Server\n");
+			// printf("Received NACK from Server\n");
 			// continue without incrementing ci
 			continue;
 		}

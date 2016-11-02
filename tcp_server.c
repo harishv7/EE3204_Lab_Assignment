@@ -148,7 +148,7 @@ void str_ser(int sockfd, int error_prob) {
 			ack.num = 1;
 			ack.len = 0;
 
-			printf("Sending ACK for received packet\n");
+			// printf("Sending ACK for received packet\n");
 
 			if ((n = send(sockfd, &ack, 2, 0)) == -1) {
 				printf("Error while sending ACK packet!");
@@ -159,7 +159,7 @@ void str_ser(int sockfd, int error_prob) {
 			ack.num = -1;
 			ack.len = 0;
 
-			printf("Sending NACK for received packet\n");
+			// printf("Sending NACK for received packet\n");
 
 			// increment total number of errors
 			num_of_errors++;
