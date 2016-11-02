@@ -23,7 +23,7 @@ int main(int argc, char **argv) {
 	FILE *fp;
 
 	if (argc != 2) {
-		printf("parameters not match");
+		printf("Parameters do not match. Expected: <server_name/port>\n");
 	}
 
 	// get host's information
@@ -133,6 +133,7 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 
 		memcpy(sends.data, (buf+ci), slen);
 
+		// assign packet properties (len = length being sent, num = 0)
 		sends.len = slen;
 		sends.num = 0;
 

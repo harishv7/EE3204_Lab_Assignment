@@ -9,13 +9,21 @@ tcp_ser.c: the source file of the server in tcp transmission
 // transmitting and receiving function
 void str_ser(int sockfd);
 
-int main(void) {
+int main(int argc, char **argv) {
 	int sockfd, con_fd, ret;
 	struct sockaddr_in my_addr;
 	struct sockaddr_in their_addr;
 	int sin_size;
+	int error_prob;
 
 	pid_t pid;
+
+	if (argc != 2) {
+		printf("Given parameters do not match. Expected: <error_probability>\n");
+	}
+
+	// obtain error probability & convert from string to int
+	error_prob = atoi(argv[1]);
 
 	//create socket
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -86,6 +94,7 @@ void str_ser(int sockfd) {
 	
 	printf("receiving data!\n");
 
+	// loop till you receive all packets
 	while(!end) {
 		// receive the packet
 		if ((n = recv(sockfd, &recvs, PACKLEN, 0)) == -1) {
