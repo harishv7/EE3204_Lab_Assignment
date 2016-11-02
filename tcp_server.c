@@ -20,14 +20,11 @@ int main(int argc, char **argv) {
 	pid_t pid;
 
 	if (argc != 2) {
-		printf("Given parameters do not match. Expected: <error_probability>\n");
+		printf("Given parameters do not match. Expected: <error_probability> from 0 to 100.\n");
 	}
 
 	// obtain error probability & convert from string to int
 	error_prob = atoi(argv[1]);
-
-	// initialise rand seed
-	srand(time(NULL));
 
 	//create socket
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -77,12 +74,12 @@ int main(int argc, char **argv) {
 			str_ser(con_fd, error_prob);
 			close(con_fd);
 			exit(0);
-		}
-		else {
+		} else {
 			// parent process
 			close(con_fd);
 		}
 	}
+
 	close(sockfd);
 	exit(0);
 }
@@ -94,33 +91,44 @@ void str_ser(int sockfd, int error_prob) {
 	struct ack_so ack;
 	int end, n = 0;
 	long lseek = 0;
-	int random_num;
-	int is_packet_damaged;
-	int num_of_errors = 0;
-	int total_packets = 0;
 	end = 0;
+
+	int random_num;			// random number generated (to simulate damaged packet)
+	int is_packet_damaged;	// flag to indicate if a packet is damaged or not
+	int num_of_errors = 0;	// total number of errors so far
+	int total_packets = 0;	// total number of packets received so far
 	
-	printf("receiving data!\n");
+	printf("Receiving data!\n");
+
+	// initialise rand seed
+	srand(time(NULL));
 
 	// loop till you receive all packets
 	while(!end) {
 		// receive the packet
 		if ((n = recv(sockfd, &recvs, PACKLEN, 0)) == -1) {
-			printf("error when receiving\n");
+			printf("An error when receiving packet\n");
 			exit(1);
 		}
 
 		// increment total packet count
 		total_packets++;
 
-		// determine if the packet is damaged (based on error probability)
-		// generate random number from 0 to 100
-		random_num = rand() % 101;
-		// check if random number is less than or equal to the error probability
-		if(random_num <= error_prob) {
-			is_packet_damaged = 1;
-		} else {
+		/** Determine if the packet is damaged (based on error probability) **/
+		// if error probability is 0, this falls into the case of zero error
+		// else, we consider the non-zero error case
+		if(error_prob <= 0) {
 			is_packet_damaged = 0;
+		} else {
+			// generate random number from 0 to 100
+			random_num = rand() % 101;
+
+			// check if random number is less than or equal to the error probability
+			if(random_num <= error_prob) {
+				is_packet_damaged = 1;
+			} else {
+				is_packet_damaged = 0;
+			}
 		}
 
 		// if packet is not damaged, proceed normally and send ACK
@@ -153,7 +161,7 @@ void str_ser(int sockfd, int error_prob) {
 
 			printf("Sending NACK for received packet\n");
 
-			// increment number of errors
+			// increment total number of errors
 			num_of_errors++;
 
 			if ((n = send(sockfd, &ack, 2, 0)) == -1) {
@@ -176,5 +184,5 @@ void str_ser(int sockfd, int error_prob) {
 	// print error metrics
 	printf("Total number of errors received: %d\n", num_of_errors);
 	printf("Total number of packets received: %d\n", total_packets);
-	printf("Error Rate: %.2f\n", (num_of_errors / (float) total_packets));
+	printf("Error Rate: %.5f\n", (num_of_errors / (float) total_packets));
 }

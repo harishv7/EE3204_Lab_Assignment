@@ -23,7 +23,7 @@
 #define ACK_CODE 1
 #define NACK_CODE -1
 
-struct pack_so			//data packet structure
+struct pack_so			// data packet structure
 {
 uint32_t num;				// the sequence number
 uint32_t len;					// the packet length

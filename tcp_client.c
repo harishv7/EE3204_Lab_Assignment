@@ -116,13 +116,13 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	if (buf == NULL) exit (2);
 
   	// copy the file into the buffer.
-	fread (buf,1,lsize,fp);
+	fread (buf, 1, lsize, fp);
 
   	/*** the whole file is loaded in the buffer. ***/
   	// append the end byte (null byte to terminate string)
 	buf[lsize] ='\0';
 
-	// get the current time
+	// get the current time (at start of transmission)
 	gettimeofday(&sendt, NULL);
 
 	while(ci<= lsize) {
@@ -162,7 +162,7 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 		}
 	}
 
-	// get current time
+	// get current time (at the end of transmission)
 	gettimeofday(&recvt, NULL);
 
 	*len= ci;
