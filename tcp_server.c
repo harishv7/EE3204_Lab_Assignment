@@ -8,14 +8,14 @@ tcp_ser.c: the source file of the server in tcp transmission
 #define BACKLOG 10
 
 // transmitting and receiving function
-void str_ser(int sockfd, int error_prob);
+void str_ser(int sockfd, float error_prob);
 
 int main(int argc, char **argv) {
 	int sockfd, con_fd, ret;
 	struct sockaddr_in my_addr;
 	struct sockaddr_in their_addr;
 	int sin_size;
-	int error_prob;
+	float error_prob;
 
 	pid_t pid;
 
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
 	}
 
 	// obtain error probability & convert from string to int
-	error_prob = atoi(argv[1]);
+	error_prob = atof(argv[1]);
 
 	//create socket
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 	// bind socket
 	ret = bind(sockfd, (struct sockaddr *) &my_addr, sizeof(struct sockaddr));
 
-	if (ret <0) {
+	if (ret < 0) {
 		printf("error in binding");
 		exit(1);
 	}
@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
 	exit(0);
 }
 
-void str_ser(int sockfd, int error_prob) {
+void str_ser(int sockfd, float error_prob) {
 	char buf[BUFSIZE];
 	FILE *fp;
 	struct pack_so recvs;
@@ -93,7 +93,7 @@ void str_ser(int sockfd, int error_prob) {
 	long lseek = 0;
 	end = 0;
 
-	int random_num;			// random number generated (to simulate damaged packet)
+	float random_num;		// random number generated (to simulate damaged packet)
 	int is_packet_damaged;	// flag to indicate if a packet is damaged or not
 	int num_of_errors = 0;	// total number of errors so far
 	int total_packets = 0;	// total number of packets received so far
@@ -121,7 +121,7 @@ void str_ser(int sockfd, int error_prob) {
 			is_packet_damaged = 0;
 		} else {
 			// generate random number from 0 to 100
-			random_num = rand() % 101;
+			random_num = ((float)rand() / (float)(RAND_MAX)) * 100;
 
 			// check if random number is less than or equal to the error probability
 			if(random_num <= error_prob) {
