@@ -15,26 +15,29 @@ int main(int argc, char **argv) {
 	struct sockaddr_in my_addr;
 	struct sockaddr_in their_addr;
 	int sin_size;
-	float error_prob;
+	float error_prob;	// error probability (given by user)
 
+	// process id
 	pid_t pid;
 
 	if (argc != 2) {
-		printf("Given parameters do not match. Expected: <error_probability> from 0 to 100.\n");
+		printf("Given parameters do not match. Expected: <error_probability> from 0.00 to 100.00.\n");
 	}
 
-	// obtain error probability & convert from string to int
+	// obtain error probability & convert from string to float
 	error_prob = atof(argv[1]);
 
-	//create socket
+	// create socket
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (sockfd <0) {
+	if (sockfd < 0) {
 		printf("error in socket!");
 		exit(1);
 	}
-	
+		
+	// assign socket family
 	my_addr.sin_family = AF_INET;
+	// assign port
 	my_addr.sin_port = htons(MYTCP_PORT);
 	// inet_addr("172.0.0.1");
 	my_addr.sin_addr.s_addr = htonl(INADDR_ANY); 
@@ -48,10 +51,10 @@ int main(int argc, char **argv) {
 		exit(1);
 	}
 	
-	// listen
+	// listen on socket: returns 0 if successful, else -1
 	ret = listen(sockfd, BACKLOG);
 
-	if (ret <0) {
+	if (ret < 0) {
 		printf("error in listening");
 		exit(1);
 	}
@@ -68,7 +71,7 @@ int main(int argc, char **argv) {
 		}
 
 		// create acception process
-		if ((pid = fork())==0) {
+		if ((pid = fork()) == 0) {
 			close(sockfd);
 			// receive packet and response
 			str_ser(con_fd, error_prob);
@@ -84,6 +87,7 @@ int main(int argc, char **argv) {
 	exit(0);
 }
 
+// method to receive packets from client, also sends ACK/NACK
 void str_ser(int sockfd, float error_prob) {
 	char buf[BUFSIZE];
 	FILE *fp;
@@ -92,7 +96,6 @@ void str_ser(int sockfd, float error_prob) {
 	int end, n = 0;
 	long lseek = 0;
 	end = 0;
-
 	float random_num;		// random number generated (to simulate damaged packet)
 	int is_packet_damaged;	// flag to indicate if a packet is damaged or not
 	int num_of_errors = 0;	// total number of errors so far
@@ -171,6 +174,7 @@ void str_ser(int sockfd, float error_prob) {
 		}
 	}
 
+	// open file to write received data in buffer
 	if ((fp = fopen ("myTCPreceive.txt","wt")) == NULL) {
 		printf("File doesn't exit\n");
 		exit(0);

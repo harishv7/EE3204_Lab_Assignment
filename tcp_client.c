@@ -28,6 +28,7 @@ int main(int argc, char **argv) {
 	}
 
 	// get host's information
+	// sh is pointer to a struct
 	sh = gethostbyname(argv[1]);
 	if (sh == NULL) {
 		printf("error when gethostby name");
@@ -41,6 +42,7 @@ int main(int argc, char **argv) {
 		printf("the aliases name is: %s\n", *pptr);
 	}
 
+	// checking the family address type
 	switch(sh->h_addrtype) {
 		case AF_INET:
 			printf("AF_INET\n");
@@ -49,22 +51,27 @@ int main(int argc, char **argv) {
 			printf("unknown addrtype\n");
 		break;
 	}
-        
+    
+    // take the address in sh (array of pointers)
 	addrs = (struct in_addr **)sh->h_addr_list;
 
 	// create the socket
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
-	if (sockfd <0) {
+	if (sockfd < 0) {
 		printf("error in socket");
 		exit(1);
 	}
 
+	// assign family
 	ser_addr.sin_family = AF_INET;                                                      
+
+	// assign port
 	ser_addr.sin_port = htons(MYTCP_PORT);
 
 	memcpy(&(ser_addr.sin_addr.s_addr), *addrs, sizeof(struct in_addr));
 
+	// write 8 zeroed bytes (unused field), the first 8 bits
 	bzero(&(ser_addr.sin_zero), 8);
 
 	// connect the socket with the host
@@ -82,10 +89,11 @@ int main(int argc, char **argv) {
 	}
 
 	// perform the transmission and receiving
+	// ti = transfer time
 	ti = str_cli(fp, sockfd, &len);
 
-	//caculate the average transmission rate
-	rt = (len/(float)ti);
+	// calculate the average transmission rate
+	rt = (len/(float) ti);
 
 	printf("Time(ms) : %.3f, Data sent(byte): %d\nData rate: %f (Kbytes/s)\n", ti, (int)len, rt);
 
@@ -108,6 +116,7 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	fseek (fp , 0 , SEEK_END);
 	lsize = ftell (fp);
 	rewind (fp);
+
 	printf("The file length is %d bytes\n", (int) lsize);
 	printf("the packet length is %d bytes\n", DATALEN);
 
@@ -170,11 +179,13 @@ float str_cli(FILE *fp, int sockfd, long *len) {
 	// get the whole trans time
 	tv_sub(&recvt, &sendt);
 
+	// 
 	time_inv += (recvt.tv_sec)*1000.0 + (recvt.tv_usec)/1000.0;
 
 	return(time_inv);
 }
 
+// method to calculate difference between out and in
 void tv_sub(struct  timeval *out, struct timeval *in) {
 	if ((out->tv_usec -= in->tv_usec) <0) {
 		--out ->tv_sec;
