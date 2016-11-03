@@ -117,7 +117,7 @@ void str_ser(int sockfd, float error_prob) {
 		/** Determine if the packet is damaged (based on error probability) **/
 		// if error probability is 0, this falls into the case of zero error
 		// else, we consider the non-zero error case
-		if(error_prob <= 0) {
+		if(error_prob <= 0.0) {
 			is_packet_damaged = 0;
 		} else {
 			// generate random number from 0 to 100
